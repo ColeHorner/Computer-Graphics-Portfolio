@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>08 November 2018</title>
+    <meta charset=utf-8>
+    <script src="three.js-master/build/three.js"></script>
+    <script src="three.js-master/examples/js/WebGL.js"></script>
+    <script src="three.js-master/examples/js/controls/OrbitControls.js"></script>
+  </head>
+  <body>
+    <script type="text/javascript">
+    if ( WEBGL.isWebGLAvailable() === false ) {
+      document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+    }
+
+    var camera, scene, renderer, controls, polyhedron;
+    var EPSILON = 0.3;
+
+    function init(){
+      //scene
+      scene = new THREE.Scene();
+
+      //camera
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 1000);
+      camera.position.set(0,0,4);
+      camera.lookAt(new THREE.Vector3());
+
+      //renderer
+      renderer = new THREE.WebGLRenderer();
+
+      renderer.setClearColor(new THREE.Color(0xFFCC88, 1.0));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.enabled = true;
+      document.body.appendChild(renderer.domElement);
+
+      //controls
+      controls = new THREE.OrbitControls(camera);
+
+      //light
+      var spotLight = new THREE.SpotLight(0xFFFFFF);
+      spotLight.position.set(4, 6, 8);
+      spotLight.castShadow = true;
+      spotLight.exponent = 1;
+      spotLight.angle = Math.PI/3;
+
+      //geometry
+      polyhedron = new THREE.Object3D();
+      var material = new THREE.MeshPhongMaterial({color:0xFF44EE});
+      material.side = THREE.DoubleSide;
+      material.wireframe = false;
+
+      spotLight.target = polyhedron;
+      scene.add(spotLight);
+
+      var geometry = new THREE.Geometry();
+      var near = new THREE.Vector3(0,0,1);//0
+      var far = new THREE.Vector3(0,0,-1);//1
+      var east = new THREE.Vector3(1,0,0);//2
+      var north = new THREE.Vector3(0,1,0);//3
+      var west = new THREE.Vector3(-1,0,0);//4
+      var south = new THREE.Vector3(0,-1,0);//5
+      makeTriangles(east,north,near,material,polyhedron);//0
+      makeTriangles(north,west,near,material,polyhedron);//1
+      makeTriangles(west,south,near,material,polyhedron);//2
+      makeTriangles(south,east,near,material,polyhedron);//3
+      makeTriangles(west,north,far,material,polyhedron);//4
+      makeTriangles(north,east,far,material,polyhedron);//5
+      makeTriangles(east,south,far,material,polyhedron);//6
+      makeTriangles(south,west,far,material,polyhedron);//7
+
+      scene.add(polyhedron);
+    }
+
+    var makeTriangles = function(v0, v1, v2, material, polyhedron) {
+      var edge1, edge2, edge3;
+      edge1 = v0.distanceTo(v1);
+      edge2 = v1.distanceTo(v2);
+      edge3 = v2.distanceTo(v0);
+      if(Math.min(edge1,edge2,edge3) < EPSILON) {
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push(v0, v1, v2);
+        geometry.faces.push(new THREE.Face3(0,1,2));
+        geometry.computeFaceNormals();
+        geometry.computeBoundingBox();
+        geometry.computeBoundingSphere();
+        var mesh = new THREE.Mesh(geometry, material);
+        polyhedron.add(mesh);
+      }
+      else {
+        var v01 = new THREE.Vector3();
+        var v12 = new THREE.Vector3();
+        var v20 = new THREE.Vector3();
+        v01.addVectors(v0,v1);
+        v12.addVectors(v1,v2);
+        v20.addVectors(v2,v0);
+        v01.normalize();
+        v12.normalize();
+        v20.normalize();
+
+        makeTriangles(v01,v12,v20,material,polyhedron);
+        makeTriangles(v0,v01,v20,material,polyhedron);
+        makeTriangles(v1,v12,v01,material,polyhedron);
+        makeTriangles(v2,v12,v20,material,polyhedron);
+      }
+    };
+
+    var render = function() {
+        polyhedron.rotation.x+=0.02;
+        polyhedron.rotation.y+=0.03;
+        requestAnimationFrame(render);
+        renderer.render(scene, camera);
+      };
+
+    init();
+    render();
+    </script>
+  </body>
+</html>

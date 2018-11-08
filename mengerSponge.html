@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Cole's test</title>
+    <meta charset=utf-8>
+  </head>
+  <body>
+    <script src="three.js-master/build/three.js"></script>
+    <script src="three.js-master/examples/js/WebGL.js"></script>
+    <script src="three.js-master/examples/js/controls/OrbitControls.js"></script>
+    <script>
+    if ( WEBGL.isWebGLAvailable() === false ) {
+      document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+    }
+    var camera, scene, renderer, controls;
+    var mengerSquare;
+    var mengerSpongeGroup = new THREE.Group();
+
+    init();
+    //render();
+    animate();
+
+    function init(){
+      //scene
+      scene = new THREE.Scene();
+
+      //renderer
+      renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      //camera
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 1000);
+      camera.position.set(50, 0, 250);
+
+      //controls
+      controls = new THREE.OrbitControls(camera);
+
+      //light
+      var light = new THREE.DirectionalLight();
+      scene.add(light);
+
+      //world
+      var geometry = new THREE.BoxGeometry(1, 1, 1);
+      var material = new THREE.MeshPhongMaterial();
+      material.color = new THREE.Color("cyan");
+      material.wireframe = false; //turns object into a wireframe
+      mengerSquare = new THREE.Mesh(geometry, material);
+      //group to hold each recursive fractal square starting with one square
+      var group = new THREE.Group();
+      //adding initial square
+      group.add(mengerSquare);
+      //recursion call
+      mengerSpongeGroup = createSponge(1,group);
+      scene.add(mengerSpongeGroup);
+    }
+    //VERY INEFFICIENT!!!
+    function createSponge(num, group){
+      //console.log("how many times");
+      //stop recursion
+      if(num === 9) return group;
+      var tempGroup = group.clone(true);
+      for(var i = 0; i < 3*num; i+=num){
+        for(var j = 0; j < 3*num; j+=num){
+          for(var k = 0; k < 3*num; k+=num){
+            var newGroup = tempGroup.clone(true);
+            //console.log(group.position.length());
+            //Make square for correct spots and adds each new square to group
+            if(i !== num && j !== num ||
+               i !== num && k !== num ||
+               j !== num && k !== num){
+              newGroup.position.x+=i;
+              newGroup.position.y+=j;
+              newGroup.position.z+=k;
+              group.add(newGroup);
+            }
+            else; //Does not make a square for spots that are supposed to be empty
+          }
+        }
+      }
+      createSponge(num*3, group);
+      return group;
+    }
+    function getRandomInt(min, max) {
+      min = Math.ceil(min);
+      max = Math.floor(max);
+      return Math.floor(Math.random() * (max - min)) + min;
+    }
+
+    function render(){ renderer.render(scene, camera); }
+
+    function animate(){
+      requestAnimationFrame(animate);
+      var theta = Math.PI/128;
+      mengerSpongeGroup.rotateX(theta);
+      mengerSpongeGroup.rotateY(theta);
+      mengerSpongeGroup.rotateZ(theta);
+      render();
+    }
+    </script>
+  </body>
+</html>

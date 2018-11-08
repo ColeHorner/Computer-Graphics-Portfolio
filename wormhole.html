@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Wormhole</title>
+</head>
+<body>
+  <script src="three.js-master/build/three.js"></script>
+  <script src="three.js-master/examples/js/WebGL.js"></script>
+  <script src="three.js-master/examples/js/controls/OrbitControls.js"></script>
+
+  <script>
+  if ( WEBGL.isWebGLAvailable() === false ) {
+    document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+  }
+  var camera, scene, renderer, controls;
+  var tube;
+
+  init();
+  //render();
+  animate();
+
+  function init() {
+    //scene
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xFFFFFF);
+
+    //camera
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 10000);
+    camera.position.set(0,0,1000);
+
+    //renderer
+    renderer = new THREE.WebGLRenderer( {antialias: true} );
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    //controls
+    controls = new THREE.OrbitControls(camera);
+
+    //light
+    var light = new THREE.DirectionalLight();
+    scene.add(light);
+
+    var curve = new THREE.CatmullRomCurve3( [
+    	new THREE.Vector3( 0, 0, 0 ),
+    	new THREE.Vector3( 0, 0, 1 ),
+    	new THREE.Vector3( 0, 0, 2 ),
+    	new THREE.Vector3( 0, 0, 3 ),
+    	new THREE.Vector3( 0, 0, 4 )
+    ] );
+    //geometry
+    // Create the geometry of the tube based on the curve
+    // The other values are respectively :
+    // 70 : the number of segments along the tube
+    // 0.02 : its radius (yeah it's a tiny tube)
+    // 50 : the number of segments that make up the cross-section
+    // false : a value to set if the tube is closed or not
+    var tubeGeometry = new THREE.TubeGeometry(curve, 70, 1, 50, true);
+
+    // Define a material for the tube with a jpg as texture instead of plain color
+    var tubeMaterial = new THREE.MeshPhongMaterial();
+
+    // Create a mesh based on tubeGeometry and tubeMaterial
+    tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
+
+    var texture = new THREE.TextureLoader().load('textures/eromanga-sensei.jpg');
+    var cube = new THREE.BoxGeometry(700,700,500);
+    var material = new THREE.MeshBasicMaterial( { map: texture } );
+    bb = new THREE.Mesh(cube, material);
+    // Add the tube into the scene
+    //scene.add(tube);
+    scene.add(bb);
+  };
+
+  function render() { renderer.render(scene, camera); };
+
+  function animate() {
+    requestAnimationFrame(animate);
+//    var theta = Math.PI/128;
+//    tube.rotateX(theta);
+//    tube.rotateY(theta);
+//    tube.rotateZ(theta);
+    render();
+  };
+
+  </script>
+</body>
+</html>
